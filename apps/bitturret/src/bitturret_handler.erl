@@ -24,8 +24,6 @@ start() ->
     ],
     {ok, Socket} = gen_udp:open(PortNo, SocketOpts),
 
-    ets:new(hashlist,[set,named_table,public]),
-
     loop_accept(Socket, BufferPid).
 
 
