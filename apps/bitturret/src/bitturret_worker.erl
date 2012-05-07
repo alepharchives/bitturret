@@ -3,25 +3,38 @@
 
 % Connection id for testing purposes.
 -define(CONN_ID,         16#0C5C5FF5332A6048).
--define(INITIAL_CONN_ID, 16#0000041727101980).
+-define(INITIAL_CONN_ID, 16#0000041727101980). % this is bitcoin protocol!
+
+
+handle([Message|Rest]) ->
+    handle_message(Message),
+    handle(Rest);
+
+
+handle([]) -> ignored.
 
 
 
 % Pre-match on udp messages.
-handle({udp, Socket, FromIP, FromPort, Packet}) ->
+handle_message({udp, Socket, FromIP, FromPort, Packet}) ->
     Response = handle_packet(FromIP, FromPort, Packet),
 
-    gen_udp:send(Socket, FromIP, FromPort, Response);
+    case Response of
+        ignored ->
+                ok;
+        _ ->
+                gen_udp:send(Socket, FromIP, FromPort, Response)
+    end;
 
 
 % Handle errors bubbling up.
-handle(Err = {error, _}) ->
+handle_message(Err = {error, _}) ->
     io:format("~p~n", [Err]);
     % FIXME - Proper error handling required!
 
 
 % Ignore any other message.
-handle(_Message) -> ignored.
+handle_message(_Message) -> ok.
 
 
 
@@ -75,15 +88,15 @@ handle_packet(FromIP, FromPort,
 
 
 % Handle connection requests.
-handle_packet(FromIP, FromPort,
+handle_packet(_FromIP, _FromPort,
         <<
             ?INITIAL_CONN_ID:64/big,
             0:32/big,
             TransactionID:32/big,
             _Rest/binary
         >> ) ->
-    {X,Y,_Z} = now(),
-    io:format("got connection request from ~p ~p  time:~p~n", [FromIP,FromPort,X*1000000+Y]),
+%    {X,Y,_Z} = now(),
+%    io:format("got connection request from ~p ~p  time:~p~n", [FromIP,FromPort,X*1000000+Y]),
     <<0:32/big, TransactionID:32/big, ?CONN_ID:64/big>>;
 
 
