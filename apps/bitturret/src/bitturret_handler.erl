@@ -10,6 +10,9 @@ start() ->
     PortNo   = bitturret_config:get(port),
     BindAddr = bitturret_config:get(bind_addr),
 
+	%start ETS Tables
+	bitturret_storage:start(),
+
     stats_debug(),
 
     BufferPid = spawn_link(?MODULE, loop_buffer, [0, []]),
@@ -23,8 +26,6 @@ start() ->
         % {read_packets, 16}
     ],
     {ok, Socket} = gen_udp:open(PortNo, SocketOpts),
-
-    ets:new(hashlist,[set,named_table,public]),
 
     loop_accept(Socket, BufferPid).
 
