@@ -24,6 +24,7 @@ start_link() ->
 
 init([]) ->
     io:format("bitturret_sup:init/1~n"),
+ets:new(hashlist,[set,named_table,public]),
 
     Children = [?CHILD(bitturret_handler_bridge, supervisor)],
 

@@ -1,5 +1,5 @@
 -module (bitturret_handler).
--export ([start/0, loop_buffer/2, loop_accept/2, handle/1]).
+-export ([start/0, loop_buffer/2, loop_accept/2, handle/2]).
 -export ([stats_loop/1,  print_stats/0]).
 % Packet buffer length.
 -define (BUFLEN, 256).
@@ -24,8 +24,6 @@ start() ->
     ],
     {ok, Socket} = gen_udp:open(PortNo, SocketOpts),
 
-    ets:new(hashlist,[set,named_table,public]),
-
     loop_accept(Socket, BufferPid).
 
 
@@ -33,7 +31,7 @@ start() ->
 stats_debug() ->
     StatsPid = spawn(?MODULE, stats_loop, [0]),
     register(stats, StatsPid),
-    timer:apply_interval(1000000, ?MODULE, print_stats, []).
+    timer:apply_interval(1000, ?MODULE, print_stats, []).
 
 
 print_stats() -> stats ! flush.
@@ -62,7 +60,7 @@ loop_accept(Socket, BufferPid) ->
 
 % Flush message buffer in case full.
 loop_buffer(?BUFLEN, Buffer) ->
-    flush_buffer(Buffer),
+    flush_buffer(Buffer,?BUFLEN),
     loop_buffer(0, []);
 
 
@@ -75,22 +73,17 @@ loop_buffer(BufferLength, Buffer) ->
     after
         50 ->
             % Flush on timeout.
-            flush_buffer(Buffer),
+            flush_buffer(Buffer,BufferLength),
             loop_buffer(0, [])
     end.
 
 
 % Handle all messages in the buffer. Immediately returns.
-flush_buffer(Buffer) ->
-    spawn(?MODULE, handle, [Buffer]).
+flush_buffer(Buffer,BufferLength) ->
+    spawn(?MODULE, handle, [Buffer,BufferLength]).
 
 
 % For every received message, make a new worker process handle it.
-handle(Messages) ->
-    stats ! length(Messages),
-    lists:foreach(fun dispatch_worker/1, Messages).
-
-
-% Dispatch a message to a new worker process.
-dispatch_worker(Message) ->
-    spawn(bitturret_worker, handle, [Message]).
+handle(Messages,BufferLength) ->
+    stats ! BufferLength,
+    spawn(bitturret_worker, handle, [Messages]).
