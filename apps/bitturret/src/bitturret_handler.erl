@@ -63,7 +63,7 @@ loop_accept(Socket, BufferPid) ->
 
 % Flush message buffer in case full.
 loop_buffer(?BUFLEN, Buffer) ->
-    flush_buffer(Buffer,?BUFLEN),
+    flush_buffer(Buffer, ?BUFLEN),
     loop_buffer(0, []);
 
 
@@ -76,17 +76,17 @@ loop_buffer(BufferLength, Buffer) ->
     after
         50 ->
             % Flush on timeout.
-            flush_buffer(Buffer,BufferLength),
+            flush_buffer(Buffer, BufferLength),
             loop_buffer(0, [])
     end.
 
 
 % Handle all messages in the buffer. Immediately returns.
-flush_buffer(Buffer,BufferLength) ->
-    spawn(?MODULE, handle, [Buffer,BufferLength]).
+flush_buffer(Buffer, BufferLength) ->
+    spawn(?MODULE, handle, [Buffer, BufferLength]).
 
 
 % For every received message, make a new worker process handle it.
-handle(Messages,BufferLength) ->
+handle(Messages, BufferLength) ->
     stats ! BufferLength,
     spawn(bitturret_worker, handle, [Messages]).
