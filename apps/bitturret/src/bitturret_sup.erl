@@ -23,11 +23,11 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    io:format("bitturret_sup:init/1~n"),
-ets:new(hashlist,[set,named_table,public]),
+    ets:new(hashlist, [set, named_table, public]),
+    % Start ETS-based storage engine.
+    bitturret_storage:start(),
 
+    % Start the OTP supervisor bridge for the UDP packet handler.
     Children = [?CHILD(bitturret_handler_bridge, supervisor)],
-
     RestartStrategy = {one_for_one, 0, 1},
-
     {ok, {RestartStrategy, Children}}.

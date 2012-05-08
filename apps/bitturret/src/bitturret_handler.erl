@@ -7,11 +7,8 @@
 
 % OTP boilerplate.
 start() ->
-    PortNo   = bitturret_config:get(port),
-    BindAddr = bitturret_config:get(bind_addr),
-
-	%start ETS Tables
-	bitturret_storage:start(),
+    PortNo   = std_config:get(port),
+    BindAddr = std_config:get(bind_addr),
 
     stats_debug(),
 
