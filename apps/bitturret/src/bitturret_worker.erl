@@ -75,8 +75,8 @@ handle_packet(FromIP, FromPort,
 
     IntIP = ip_to_int(FromIP),
 
-    addpeer({IntIP,FromPort},InfoHash),
-    Peers = getpeers(InfoHash,10),
+    bitturret_storage:addpeer({IntIP,FromPort},InfoHash),
+    Peers = bitturret_storage:getpeers(InfoHash,10),
 
     io:format("got Peers: ~p~n", [Peers]),
     PeersBin = << <<IP:32/big, Port:16/big>> || {IP,Port} <- Peers >>,
@@ -118,23 +118,6 @@ handle_packet(FromIP, FromPort, _Data) ->
     {X,Y,_Z} = now(),
     io:format("got invalid packet from ~p ~p  time:~p~n", [FromIP,FromPort,X*1000000+Y]),
     ignored.
-
-% adds a peer to the list of peers for the infohash
-addpeer(Peer, InfoHash) ->
-    PeersTmp = ets:lookup(hashlist,InfoHash),
-    case PeersTmp of
-        [] ->
-            ets:insert(hashlist,{InfoHash,[Peer]});
-	_ ->
-            {_InfoHash,PeerList} = hd(PeersTmp),
-            ets:insert(hashlist,{InfoHash,[Peer|PeerList]})
-    end.
-
-
-getpeers(InfoHash,_Count) ->
-    PeersTmp = ets:lookup(hashlist,InfoHash),
-    {_InfoHash,PeerList} = hd(PeersTmp),
-    PeerList.
 
 
 ip_to_int({A,B,C,D}) -> (A*16777216)+(B*65536)+(C*256)+(D).

@@ -10,6 +10,9 @@ start() ->
     PortNo   = bitturret_config:get(port),
     BindAddr = bitturret_config:get(bind_addr),
 
+	%start ETS Tables
+	bitturret_storage:start(),
+
     stats_debug(),
 
     BufferPid = spawn_link(?MODULE, loop_buffer, [0, []]),
